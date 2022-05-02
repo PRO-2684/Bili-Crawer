@@ -2,7 +2,6 @@ import dm_pb2 as Danmaku
 from requests import Session
 from json import dump
 
-# from google.protobuf import text_format
 
 class Video:
     def __init__(self, bv: str) -> None:
