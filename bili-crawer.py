@@ -56,6 +56,9 @@ class Video:
         return danmakus.elems
         # print(text_format.MessageToString(danmakus.elems[0], as_utf8=True))
 
+    def download_danmakus(self):
+        pass
+
     def fetch_comments(self, page: int = 0, mode: int = 3):
         """Returns a list of comments in `dict` format.
 
@@ -69,6 +72,12 @@ class Video:
         param = {"type": 1, "oid": 552506117, "mode": mode, "next": page}  # self.oid???
         r = self.session.get(api, params=param)
         return r.json()
+
+    def download_comments(self):
+        pass
+
+    def download_video(self):
+        pass
 
 
 if __name__ == "__main__":
@@ -104,10 +113,9 @@ if __name__ == "__main__":
     bv = bv[:2].upper() + bv[2:]
     print("Target video:", bv)
     video = Video(bv)
-    print("Title:", video.title)
-    print("Up:", video.uploader)
-    for k, v in video.statistics.items():
-        print(f"{k.capitalize()}: {v}")
+    print(
+        f"Title: {video.title}\nUp: {video.uploader}\nView: {video.statistics['view']}\tLike: {video.statistics['like']}\tCoin: {video.statistics['coin']}\tFavorite: {video.statistics['favorite']}"
+    )
     print("Video parts:")
     for part in video.parts:
         print("  #", part["id"])
@@ -116,6 +124,12 @@ if __name__ == "__main__":
         print(
             f'  Resolution: {part["resolution"]["width"]}x{part["resolution"]["height"]}'
         )
+    if args.comment:
+        video.download_comments()
+    if args.danmaku:
+        video.download_danmakus()
+    if args.video:
+        video.download_video()
     # Example usage:
     # danmakus = video.fetch_danmakus()
     # with open("danmaku.txt", "w", encoding="utf-8") as f:
