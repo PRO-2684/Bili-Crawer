@@ -13,3 +13,11 @@ We plan to do:
 * Dynamics crawling
 
 Your stars are highly welcomed.
+
+## Installation
+1. `pip install -r requirements.txt`.
+2. Download `dm_pb2.py` and `bili-crawer.py`.
+
+## Usage
+`bili-crawer.py [-h] [-o OUTPUT] [-v] [-c] [-d] [--debug] target`
+Use `bili-crawer.py -h` for detailed information.
