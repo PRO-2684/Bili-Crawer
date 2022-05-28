@@ -2,6 +2,7 @@ from argparse import ArgumentParser
 import dm_pb2 as Danmaku
 from requests import Session
 from re import search
+from bs4 import BeautifulSoup
 
 
 class Video:
@@ -41,6 +42,38 @@ class Video:
         ).json()
         assert r["code"] == 0, "Error fetching video info: " + r["message"]
         return r["data"]
+
+    def fetch_playlist(self):
+        r = self.session.get("https://www.bilibili.com/video/" + self.bv)
+        if not "base-video-sections" in r.text:
+            return [self.bv]
+        else:
+            res = []
+            soup = BeautifulSoup(r.text, features='html.parser')
+            playlist = soup.find('div', {'class': 'base-video-sections'})
+            if not playlist:
+                playlist = soup.find('div', {'class': 'base-video-sections-v1'})
+            url = playlist.div.div.div.a['href']
+            m = search(r"(\d+)/channel/collectiondetail\?sid=(\d+)", url)
+            if m:
+                mid, sid = m.groups()
+            else:
+                raise Exception(f"Unexpected playlist url '{url}'.")
+            left = True
+            i = 1
+            while left:
+                r = self.session.get('https://api.bilibili.com/x/polymer/space/seasons_archives_list', params={
+                    'mid': mid,
+                    'season_id': sid,
+                    'sort_reverse': False,
+                    'page_num': i,
+                    'page_size': 30
+                }).json()['data']
+                for video in r['archives']:
+                    res.append(video['bvid'])
+                left = len(res) < r['page']['total']
+                i += 1
+            return res
 
     def fetch_danmakus(
         self, serial: int = 1, avid: int = 0, type_: int = 1
@@ -100,6 +133,12 @@ if __name__ == "__main__":
         "-d", "--danmaku", help="If included, download danmakus.", action="store_true"
     )
     parser.add_argument(
+        "-l",
+        "--playlist",
+        help="If included, download the entire playlist.",
+        action="store_true",
+    )
+    parser.add_argument(
         "--debug", help="Use debug mode. i.e. show more info.", action="store_true"
     )
     args = parser.parse_args()
@@ -124,12 +163,24 @@ if __name__ == "__main__":
         print(
             f'  Resolution: {part["resolution"]["width"]}x{part["resolution"]["height"]}'
         )
-    if args.comment:
-        video.download_comments()
-    if args.danmaku:
-        video.download_danmakus()
-    if args.video:
-        video.download_video()
+    if not args.playlist:
+        if args.comment:
+            video.download_comments()
+        if args.danmaku:
+            video.download_danmakus()
+        if args.video:
+            video.download_video()
+    else:
+        playlist = video.fetch_playlist()
+        for bv in playlist:
+            video = Video(bv)
+            if args.comment:
+                video.download_comments()
+            if args.danmaku:
+                video.download_danmakus()
+            if args.video:
+                video.download_video()
+            
     # Example usage:
     # danmakus = video.fetch_danmakus()
     # with open("danmaku.txt", "w", encoding="utf-8") as f:
