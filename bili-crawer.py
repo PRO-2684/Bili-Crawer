@@ -82,15 +82,15 @@ class Video:
             return res
 
     def fetch_danmakus(
-            self, serial: int = 1, avid: int = 0, type_: int = 1
+            self,page: int, serial: int = 1, avid: int = 0, type_: int = 1,
     ) -> list[Danmaku.DanmakuElem]:
         """Returns a list of `DanmakuElem`. Remember to use `as_utf8`."""
         api = "https://api.bilibili.com/x/v2/dm/web/seg.so"
-        param = {"type": type_, "oid": self.parts[part_num - 1]['cid'], "segment_index": serial}
+        param = {"type": type_, "oid": self.parts[page - 1]['cid'], "segment_index": serial}
         if avid:
             param["pid"] = avid
         danmku = []
-        n = self.parts[part_num - 1]["duration"] // 360  # 时长每6分钟爬取一次
+        n = self.parts[page - 1]["duration"] // 360  # 时长每6分钟爬取一次
         for i in range(n + 1):
             r = self.session.get(api, params=param)
             danmakus = Danmaku.DmSegMobileReply()
@@ -102,12 +102,26 @@ class Video:
             param["segment_index"] += 1
         return danmku
 
-    def download_danmakus(self):
-        danmakus = self.fetch_danmakus()
-        file = open("danmuku"+str(part_num)+"txt", "w+", encoding="utf-8")
-        for danmu in danmakus:
-            file.write(danmu + "\n")
-        file.close()
+    def pagenum(self,pagestr):
+        pagestr = pagestr.split(",")
+        pagelis = []
+        for st in pagestr:
+            try:
+                pagelis.append(int(st))
+            except:
+                rang = st.split("-")
+                for t in range(int(rang[0]), int(rang[1]) + 1):
+                    pagelis.append(t)
+        return pagelis
+
+    def download_danmakus(self,page_list: str):
+        pagelis=self.pagenum(page_list)
+        for i in pagelis:
+            danmakus = self.fetch_danmakus(i)
+            with open(f"danmakus_{i}.txt", "w",encoding="utf-8") as f:
+                for danmu in danmakus:
+                    f.write(danmu+"\n")
+            f.close()
 
     def fetch_comments(self, page: int = 0, mode: int = 3):
         """Returns a list of comments in `dict` format.
