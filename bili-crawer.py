@@ -1,4 +1,7 @@
 from argparse import ArgumentParser
+
+from google.protobuf import text_format
+
 import dm_pb2 as Danmaku
 from requests import Session
 from re import search
@@ -79,21 +82,32 @@ class Video:
             return res
 
     def fetch_danmakus(
-        self, serial: int = 1, avid: int = 0, type_: int = 1
-    ) -> list[Danmaku.DanmakuElem]:
+            self, serial: int = 1, avid: int = 0, type_: int = 1
+    ) -> list[Danmaku]:
         """Returns a list of `DanmakuElem`. Remember to use `as_utf8`."""
         api = "https://api.bilibili.com/x/v2/dm/web/seg.so"
-        param = {"type": type_, "oid": self.cid, "segment_index": serial}
+        param = {"type": type_, "oid": self.parts[part_num - 1]['cid'], "segment_index": serial}
         if avid:
             param["pid"] = avid
-        r = self.session.get(api, params=param)
-        danmakus = Danmaku.DmSegMobileReply()
-        danmakus.ParseFromString(r.content)
-        return danmakus.elems
-        # print(text_format.MessageToString(danmakus.elems[0], as_utf8=True))
+        danmku = []
+        n = self.parts[part_num - 1]["duration"] // 360  # 时长每6分钟爬取一次
+        for i in range(n + 1):
+            r = self.session.get(api, params=param)
+            danmakus = Danmaku.DmSegMobileReply()
+            danmakus.ParseFromString(r.content)
+            for danmu in danmakus.elems:
+                danm = text_format.MessageToString(danmu, as_utf8=True)
+                d_a_n = danm.split()
+                danmku.append(d_a_n[13][1:-1])
+            param["segment_index"] += 1
+        return danmku
 
     def download_danmakus(self):
-        pass
+        danmakus = self.fetch_danmakus()
+        file = open("danmuku"+str(part_num)+"txt", "w+", encoding="utf-8")
+        for danmu in danmakus:
+            file.write(danmu + "\n")
+        file.close()
 
     def fetch_comments(self, page: int = 0, mode: int = 3):
         """Returns a list of comments in `dict` format.
