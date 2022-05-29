@@ -49,11 +49,11 @@ class Video:
             return [self.bv]
         else:
             res = []
-            soup = BeautifulSoup(r.text, features='html.parser')
-            playlist = soup.find('div', {'class': 'base-video-sections'})
+            soup = BeautifulSoup(r.text, features="html.parser")
+            playlist = soup.find("div", {"class": "base-video-sections"})
             if not playlist:
-                playlist = soup.find('div', {'class': 'base-video-sections-v1'})
-            url = playlist.div.div.div.a['href']
+                playlist = soup.find("div", {"class": "base-video-sections-v1"})
+            url = playlist.div.div.div.a["href"]
             m = search(r"(\d+)/channel/collectiondetail\?sid=(\d+)", url)
             if m:
                 mid, sid = m.groups()
@@ -62,16 +62,19 @@ class Video:
             left = True
             i = 1
             while left:
-                r = self.session.get('https://api.bilibili.com/x/polymer/space/seasons_archives_list', params={
-                    'mid': mid,
-                    'season_id': sid,
-                    'sort_reverse': False,
-                    'page_num': i,
-                    'page_size': 30
-                }).json()['data']
-                for video in r['archives']:
-                    res.append(video['bvid'])
-                left = len(res) < r['page']['total']
+                r = self.session.get(
+                    "https://api.bilibili.com/x/polymer/space/seasons_archives_list",
+                    params={
+                        "mid": mid,
+                        "season_id": sid,
+                        "sort_reverse": False,
+                        "page_num": i,
+                        "page_size": 30,
+                    },
+                ).json()["data"]
+                for video in r["archives"]:
+                    res.append(video["bvid"])
+                left = len(res) < r["page"]["total"]
                 i += 1
             return res
 
@@ -133,10 +136,16 @@ if __name__ == "__main__":
         "-d", "--danmaku", help="If included, download danmakus.", action="store_true"
     )
     parser.add_argument(
+        "-p",
+        "--pagelist",
+        help="Specify which parts in the pagelist you'd like to download.",
+        default="",
+    )
+    parser.add_argument(
         "-l",
         "--playlist",
-        help="If included, download the entire playlist.",
-        action="store_true",
+        help="Specify which video(s) in the playlist you'd like to download.",
+        default="",
     )
     parser.add_argument(
         "--debug", help="Use debug mode. i.e. show more info.", action="store_true"
@@ -167,7 +176,7 @@ if __name__ == "__main__":
         if args.comment:
             video.download_comments()
         if args.danmaku:
-            video.download_danmakus()
+            video.download_danmakus(args.pagelist)
         if args.video:
             video.download_video()
     else:
@@ -177,10 +186,10 @@ if __name__ == "__main__":
             if args.comment:
                 video.download_comments()
             if args.danmaku:
-                video.download_danmakus()
+                video.download_danmakus(args.pagelist)
             if args.video:
                 video.download_video()
-            
+
     # Example usage:
     # danmakus = video.fetch_danmakus()
     # with open("danmaku.txt", "w", encoding="utf-8") as f:
