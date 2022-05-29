@@ -100,7 +100,11 @@ class Video:
         return danmku
 
     def download_danmakus(self):
-        pass
+        danmakus = self.fetch_danmakus()
+        file = open("danmuku"+str(part_num)+"txt", "w+", encoding="utf-8")
+        for danmu in danmakus:
+            file.write(danmu + "\n")
+        file.close()
 
     def fetch_comments(self, page: int = 0, mode: int = 3):
         """Returns a list of comments in `dict` format.
