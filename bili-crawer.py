@@ -192,7 +192,7 @@ if __name__ == "__main__":
         if args.danmaku:
             video.download_danmakus(args.pagelist)
         if args.video:
-            video.download_video()
+            video.download_video(args.pagelist)
     else:
         playlist = video.fetch_playlist()
         for bv in playlist:
@@ -202,7 +202,7 @@ if __name__ == "__main__":
             if args.danmaku:
                 video.download_danmakus(args.pagelist)
             if args.video:
-                video.download_video()
+                video.download_video(args.pagelist)
 
     # Example usage:
     # danmakus = video.fetch_danmakus()
