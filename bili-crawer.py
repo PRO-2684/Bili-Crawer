@@ -89,18 +89,17 @@ class Video:
         param = {"type": type_, "oid": self.parts[part_num - 1]['cid'], "segment_index": serial}
         if avid:
             param["pid"] = avid
-        danmku = []
+        result = []
         n = self.parts[part_num - 1]["duration"] // 360  # 时长每6分钟爬取一次
-        for i in range(n + 1):
+        for _ in range(n + 1):
             r = self.session.get(api, params=param)
             danmakus = Danmaku.DmSegMobileReply()
             danmakus.ParseFromString(r.content)
-            for danmu in danmakus.elems:
-                danm = text_format.MessageToString(danmu, as_utf8=True)
-                d_a_n = danm.split()
-                danmku.append(d_a_n[13][1:-1])
+            for danmaku in danmakus.elems:
+                danmaku_text = text_format.MessageToString(danmaku, as_utf8=True).split()
+                result.append(danmaku_text[13][1:-1])
             param["segment_index"] += 1
-        return danmku
+        return result
 
     def download_danmakus(self):
         danmakus = self.fetch_danmakus()
