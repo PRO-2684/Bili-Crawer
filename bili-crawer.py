@@ -116,7 +116,7 @@ class Video:
 
     def download_danmakus(self,page_list: str):
         if page_list == "":
-            page_list = [k+1 for k in range(len(self.parts))]
+            pagelis = [k+1 for k in range(len(self.parts))]
         else:
             pagelis=self.pagenum(page_list)
         for i in pagelis:
