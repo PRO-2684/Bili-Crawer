@@ -83,7 +83,7 @@ class Video:
 
     def fetch_danmakus(
             self, serial: int = 1, avid: int = 0, type_: int = 1
-    ) -> list[Danmaku]:
+    ) -> list[Danmaku.DanmakuElem]:
         """Returns a list of `DanmakuElem`. Remember to use `as_utf8`."""
         api = "https://api.bilibili.com/x/v2/dm/web/seg.so"
         param = {"type": type_, "oid": self.parts[part_num - 1]['cid'], "segment_index": serial}
