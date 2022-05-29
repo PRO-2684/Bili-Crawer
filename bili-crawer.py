@@ -1,11 +1,11 @@
-from argparse import ArgumentParser, RawDescriptionHelpFormatter
-
-from google.protobuf import text_format
-
 import dm_pb2 as Danmaku
+from argparse import ArgumentParser, RawDescriptionHelpFormatter
+from google.protobuf import text_format
 from requests import Session
 from re import search
 from bs4 import BeautifulSoup
+from os import chdir, mkdir
+from os.path import isdir
 
 
 class Video:
@@ -82,27 +82,36 @@ class Video:
             return res
 
     def fetch_danmakus(
-            self,page: int, serial: int = 1, avid: int = 0, type_: int = 1,
+        self,
+        page: int,
+        serial: int = 1,
+        avid: int = 0,
+        type_: int = 1,
     ) -> list[Danmaku.DanmakuElem]:
         """Returns a list of `DanmakuElem`. Remember to use `as_utf8`."""
         api = "https://api.bilibili.com/x/v2/dm/web/seg.so"
-        param = {"type": type_, "oid": self.parts[page - 1]['cid'], "segment_index": serial}
+        param = {
+            "type": type_,
+            "oid": self.parts[page - 1]["cid"],
+            "segment_index": serial,
+        }
         if avid:
             param["pid"] = avid
         danmku = []
         n = self.parts[page - 1]["duration"] // 360  # 时长每6分钟爬取一次
-        for i in range(n + 1):
+        for _ in range(n + 1):
             r = self.session.get(api, params=param)
             danmakus = Danmaku.DmSegMobileReply()
             danmakus.ParseFromString(r.content)
-            for danmu in danmakus.elems:
-                danm = text_format.MessageToString(danmu, as_utf8=True)
-                d_a_n = danm.split()
-                danmku.append(d_a_n[13][1:-1])
+            for danmaku in danmakus.elems:
+                danmaku_text = text_format.MessageToString(
+                    danmaku, as_utf8=True
+                ).split()
+                danmku.append(danmaku_text[13][1:-1])
             param["segment_index"] += 1
         return danmku
 
-    def pagenum(self,pagestr):
+    def pagenum(self, pagestr):
         pagestr = pagestr.split(",")
         pagelis = []
         for st in pagestr:
@@ -114,13 +123,13 @@ class Video:
                     pagelis.append(t)
         return pagelis
 
-    def download_danmakus(self,page_list: str):
-        pagelis=self.pagenum(page_list)
+    def download_danmakus(self, page_list: str):
+        pagelis = self.pagenum(page_list)
         for i in pagelis:
             danmakus = self.fetch_danmakus(i)
-            with open(f"danmakus_{i}.txt", "w",encoding="utf-8") as f:
+            with open(f"danmakus_{i}.txt", "w", encoding="utf-8") as f:
                 for danmu in danmakus:
-                    f.write(danmu+"\n")
+                    f.write(danmu + "\n")
             f.close()
 
     def fetch_comments(self, page: int = 0, mode: int = 3):
@@ -152,7 +161,10 @@ if __name__ == "__main__":
 |   _  <  |  | |  |     |  | |______|  |     |      /      /  /_\  \  \            /   |   __|  |      /     
 |  |_)  | |  | |  `----.|  |        |  `----.|  |\  \----./  _____  \  \    /\    /    |  |____ |  |\  \----.
 |______/  |__| |_______||__|         \______|| _| `._____/__/     \__\  \__/  \__/     |_______|| _| `._____|"""
-    parser = ArgumentParser(description=banner + "\n\nA simple script for Bilibili crawling.", formatter_class=RawDescriptionHelpFormatter)
+    parser = ArgumentParser(
+        description=banner + "\n\nA simple script for Bilibili crawling.",
+        formatter_class=RawDescriptionHelpFormatter,
+    )
     parser.add_argument(
         "target",
         help='A string with target BV id in it, for example "prefixbV1GJ411x7h7suffix".',
@@ -194,6 +206,9 @@ if __name__ == "__main__":
         parser.error("No valid BV found.")
     bv = bv[:2].upper() + bv[2:]
     print("Target video:", bv)
+    if not isdir(bv):
+        mkdir(bv)
+    chdir(bv)
     video = Video(bv)
     print(
         f"Title: {video.title}\nUp: {video.uploader}\nView: {video.statistics['view']}\tLike: {video.statistics['like']}\tCoin: {video.statistics['coin']}\tFavorite: {video.statistics['favorite']}"
