@@ -115,7 +115,10 @@ class Video:
         return pagelis
 
     def download_danmakus(self,page_list: str):
-        pagelis=self.pagenum(page_list)
+        if page_list == "":
+            page_list = [k+1 for k in range(len(self.parts))]
+        else:
+            pagelis=self.pagenum(page_list)
         for i in pagelis:
             danmakus = self.fetch_danmakus(i)
             with open(f"danmakus_{i}.txt", "w",encoding="utf-8") as f:
