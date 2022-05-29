@@ -1,4 +1,4 @@
-from argparse import ArgumentParser
+from argparse import ArgumentParser, RawDescriptionHelpFormatter
 
 from google.protobuf import text_format
 
@@ -149,7 +149,13 @@ class Video:
 
 if __name__ == "__main__":
     # Parse commandline arguments.
-    parser = ArgumentParser(description="A simple script for Bilibili crawling.")
+    banner = r""".______    __   __       __           ______ .______          ___   ____    __    ____  _______ .______      
+|   _  \  |  | |  |     |  |         /      ||   _  \        /   \  \   \  /  \  /   / |   ____||   _  \     
+|  |_)  | |  | |  |     |  |  ______|  ,----'|  |_)  |      /  ^  \  \   \/    \/   /  |  |__   |  |_)  |    
+|   _  <  |  | |  |     |  | |______|  |     |      /      /  /_\  \  \            /   |   __|  |      /     
+|  |_)  | |  | |  `----.|  |        |  `----.|  |\  \----./  _____  \  \    /\    /    |  |____ |  |\  \----.
+|______/  |__| |_______||__|         \______|| _| `._____/__/     \__\  \__/  \__/     |_______|| _| `._____|"""
+    parser = ArgumentParser(description=banner + "\n\nA simple script for Bilibili crawling.", formatter_class=RawDescriptionHelpFormatter)
     parser.add_argument(
         "target",
         help='A string with target BV id in it, for example "prefixbV1GJ411x7h7suffix".',
