@@ -1,2 +1,3 @@
 requests
 protobuf
+beautifulsoup4
