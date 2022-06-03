@@ -173,7 +173,7 @@ if __name__ == "__main__":
         help='A string with target BV id in it, for example "prefixbV1GJ411x7h7suffix".',
     )
     parser.add_argument(
-        "-o", "--output", help="Output directory.", default="./", required=False
+        "-o", "--output", help="Output directory.", default="", required=False
     )
     parser.add_argument(
         "-v", "--video", help="If included, download video(s).", action="store_true"
@@ -209,9 +209,11 @@ if __name__ == "__main__":
         parser.error("No valid BV found.")
     bv = bv[:2].upper() + bv[2:]
     print("Target video:", bv)
-    if not isdir(bv):
-        mkdir(bv)
-    chdir(bv)
+    if not args.outpput:
+        args.output = bv
+    if not isdir(args.output):
+        mkdir(args.output)
+    chdir(args.output)
     video = Video(bv)
     print(
         f"Title: {video.title}\nUp: {video.uploader}\nView: {video.statistics['view']}\tLike: {video.statistics['like']}\tCoin: {video.statistics['coin']}\tFavorite: {video.statistics['favorite']}"
