@@ -14,7 +14,8 @@ class Video:
         self.session = Session()
         self.session.headers.update(
             {
-                "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.74 Safari/537.36 Edg/99.0.1150.55"
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.74 Safari/537.36 Edg/99.0.1150.55",
+                "Referer": "https://www.bilibili.com/",
             }
         )
         info = self.fetch_info()
@@ -123,11 +124,11 @@ class Video:
                     pagelis.append(t)
         return pagelis
 
-    def download_danmakus(self,page_list: str):
+    def download_danmakus(self, page_list: str):
         if page_list == "":
-            pagelis = [k+1 for k in range(len(self.parts))]
+            pagelis = [k + 1 for k in range(len(self.parts))]
         else:
-            pagelis=self.pagenum(page_list)
+            pagelis = self.pagenum(page_list)
         for i in pagelis:
             danmakus = self.fetch_danmakus(i)
             with open(f"danmakus_{i}.txt", "w", encoding="utf-8") as f:
@@ -153,19 +154,17 @@ class Video:
         pass
 
     def download_video(self):
-        x = Session()
-        x.headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36 Edg/91.0.864.67',
-            'Referer':'https://www.bilibili.com/'
-        }
-        r = self.session.get('http://api.bilibili.com/x/player/playurl',params={
-            'bvid': self.bv,
-            'cid': self.parts[0]["cid"], #空的地方就是分p中p的序号
-        })
-        r.encoding = 'utf-8'
-        url = r.json()['data']['durl'][0]['url']#这里再加一个循环，最后把视频合并就好
-        r = x.get(url)
-        with open('test.flv', 'wb') as f:
+        r = self.session.get(
+            "http://api.bilibili.com/x/player/playurl",
+            params={
+                "bvid": self.bv,
+                "cid": self.parts[0]["cid"],  # 空的地方就是分p中p的序号
+            },
+        )
+        r.encoding = "utf-8"
+        url = r.json()["data"]["durl"][0]["url"]  # 这里再加一个循环，最后把视频合并就好
+        r = self.session.get(url)
+        with open("test.flv", "wb") as f:
             f.write(r.content)
 
 
@@ -186,7 +185,7 @@ if __name__ == "__main__":
         help='A string with target BV id in it, for example "prefixbV1GJ411x7h7suffix".',
     )
     parser.add_argument(
-        "-o", "--output", help="Output directory.", default="./", required=False
+        "-o", "--output", help="Output directory.", default="", required=False
     )
     parser.add_argument(
         "-v", "--video", help="If included, download video(s).", action="store_true"
