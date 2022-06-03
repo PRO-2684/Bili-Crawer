@@ -153,7 +153,20 @@ class Video:
         pass
 
     def download_video(self):
-        pass
+        x = Session()
+        x.headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36 Edg/91.0.864.67',
+            'Referer':'https://www.bilibili.com/'
+        }
+        r = self.session.get('http://api.bilibili.com/x/player/playurl',params={
+            'bvid': self.bv,
+            'cid': self.parts[0]["cid"], #空的地方就是分p中p的序号
+        })
+        r.encoding = 'utf-8'
+        url = r.json()['data']['durl'][0]['url']#这里再加一个循环，最后把视频合并就好
+        r = x.get(url)
+        with open('test.flv', 'wb') as f:
+            f.write(r.content)
 
 
 if __name__ == "__main__":
@@ -173,7 +186,7 @@ if __name__ == "__main__":
         help='A string with target BV id in it, for example "prefixbV1GJ411x7h7suffix".',
     )
     parser.add_argument(
-        "-o", "--output", help="Output directory.", default="", required=False
+        "-o", "--output", help="Output directory.", default="./", required=False
     )
     parser.add_argument(
         "-v", "--video", help="If included, download video(s).", action="store_true"
@@ -209,11 +222,9 @@ if __name__ == "__main__":
         parser.error("No valid BV found.")
     bv = bv[:2].upper() + bv[2:]
     print("Target video:", bv)
-    if not args.outpput:
-        args.output = bv
-    if not isdir(args.output):
-        mkdir(args.output)
-    chdir(args.output)
+    if not isdir(bv):
+        mkdir(bv)
+    chdir(bv)
     video = Video(bv)
     print(
         f"Title: {video.title}\nUp: {video.uploader}\nView: {video.statistics['view']}\tLike: {video.statistics['like']}\tCoin: {video.statistics['coin']}\tFavorite: {video.statistics['favorite']}"
