@@ -113,18 +113,18 @@ class Video:
             param["segment_index"] += 1
         return danmku
 
-    def pagenum(self, pagestr):
+    def pagenum(self, pagestr: str):
         if pagestr == "":
             return range(1, len(self.parts) + 1)
         else:
             pagestr = pagestr.split(",")
         pagelist = []
-        for st in pagestr:
-            try:
-                pagelist.append(int(st))  # Ponder!
-            except:
-                rang = st.split("-")
-                for t in range(int(rang[0]), int(rang[1]) + 1):
+        for segment in pagestr:
+            if segment.isdigit():
+                pagelist.append(int(segment))
+            else:
+                start, end = map(int, segment.split("-"))
+                for t in range(start, end + 1):
                     pagelist.append(t)
         return pagelist
 
@@ -175,25 +175,24 @@ class Video:
                         "Referer": "https://www.bilibili.com/",
                     },
                 )
-            ) as response:
-                chunk_size = 1024
-                content_size = int(response.headers["Content-Length"])
-                data_count = 0
+            ) as r:
+                content_size = int(r.headers["Content-Length"])
+                binary = 0
                 with open(f"P{page}.flv", "wb") as file:
-                    for data in response.iter_content(
-                        chunk_size=chunk_size, decode_unicode=False
+                    for data in r.iter_content(
+                        chunk_size=1024, decode_unicode=False
                     ):
                         file.write(data)
-                        done_block = int((data_count / content_size) * 50)
-                        data_count = data_count + len(data)
-                        now_jd = (data_count / content_size) * 100
+                        binary += len(data)
+                        percentage = (binary / content_size) * 100
+                        blocks = int(percentage / 2)
                         print(
-                            f"[{done_block * '█'}{(50 - 1 - done_block) * ' '}] {now_jd:.1f}%",
+                            f"[{blocks * '█':<50}] {percentage:.1f}%",
                             end="\r",
                         )
                 print("\nDownload completed!")
             print("Trying to convert to mp4...")
-            if not system(f"ffmpeg -i P{page}.flv P{page}.mp4"):
+            if not system(f"ffmpeg -i P{page}.flv P{page}.mp4 -y"):
                 print("Removing flv...")
                 remove(f"P{page}.flv")
             else:
