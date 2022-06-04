@@ -4,7 +4,7 @@ from google.protobuf import text_format
 from requests import Session
 from re import search
 from bs4 import BeautifulSoup
-from os import chdir, mkdir, system, remove
+from os import chdir, mkdir, system, remove, listdir
 from os.path import isdir
 from contextlib import closing
 
@@ -114,7 +114,10 @@ class Video:
         return danmku
 
     def pagenum(self, pagestr):
-        pagestr = pagestr.split(",")
+        if pagelist == "":
+            return range(1, len(self.parts) + 1)
+        else:
+            pagestr = pagestr.split(",")
         pagelist = []
         for st in pagestr:
             try:
@@ -126,10 +129,7 @@ class Video:
         return pagelist
 
     def download_danmakus(self, pagelist: str):
-        if pagelist == "":
-            pages = range(len(self.parts))
-        else:
-            pages = self.pagenum(pagelist)
+        pages = self.pagenum(pagelist)
         for page in pages:
             danmakus = self.fetch_danmakus(page)
             with open(f"danmakus_{page}.txt", "w", encoding="utf-8") as f:
@@ -154,17 +154,14 @@ class Video:
         pass
 
     def download_video(self, pagelist: str):
-        if pagelist == "":
-            pages = range(len(self.parts))
-        else:
-            pages = self.pagenum(pagelist)
+        pages = self.pagenum(pagelist)
         for index, page in enumerate(pages):
             print(f"{index}", end="\r")
             r = self.session.get(
                 "http://api.bilibili.com/x/player/playurl",
                 params={
                     "bvid": self.bv,
-                    "cid": self.parts[page]["cid"],
+                    "cid": self.parts[page - 1]["cid"],
                 },
             )
             url = r.json()["data"]["durl"][0]["url"]
@@ -182,7 +179,7 @@ class Video:
                 chunk_size = 1024
                 content_size = int(response.headers["Content-Length"])
                 data_count = 0
-                with open("video.flv", "wb") as file:
+                with open(f"P{page}.flv", "wb") as file:
                     for data in response.iter_content(
                         chunk_size=chunk_size, decode_unicode=False
                     ):
@@ -196,9 +193,9 @@ class Video:
                         )
                 print("Download completed!" + " " * 50)
             print("Trying to convert to mp4...")
-            if not system("ffmpeg -i video.flv video.mp4"):
+            if not system(f"ffmpeg -i P{page}.flv P{page}.mp4"):
                 print("Removing flv...")
-                remove("video.flv")
+                remove(f"P{page}.flv")
             else:
                 print("Convertion failed!")
 
@@ -253,6 +250,7 @@ if __name__ == "__main__":
         "--debug", help="Use debug mode. i.e. show more info.", action="store_true"
     )
     args = parser.parse_args()
+    print(banner)
     bv = ""
     # Normalize to "BVxxxxxxxxxx".
     m = search(r"([Bb][Vv][A-Za-z0-9]{10})", args.target)
@@ -264,10 +262,11 @@ if __name__ == "__main__":
     print("Target video:", bv)
     if not isdir(bv):
         mkdir(bv)
-    elif args.overwrite:
-        print(f'Files under folder "{bv}" might be overwritten!')
-    else:
-        parser.error(f'Folder "{bv}" already exists!')
+    elif listdir(bv):
+        if args.overwrite:
+            print(f'Files under folder "{bv}" might be overwritten!')
+        else:
+            parser.error(f'Folder "{bv}" already exists and is not empty!')
     chdir(bv)
     video = Video(bv)
     print(
