@@ -6,7 +6,7 @@ from re import search
 from bs4 import BeautifulSoup
 from os import chdir, mkdir, system, remove
 from os.path import isdir
-
+from contextlib import closing
 
 class Video:
     def __init__(self, bv: str) -> None:
@@ -168,11 +168,35 @@ class Video:
                 },
             )
             url = r.json()["data"]["durl"][0]['url']
-            r = self.session.get(url)
-            with open(f"video.flv", "wb") as f:
-                f.write(r.content)
+            with closing(
+                self.session.get(
+                    url,
+                    stream=True,
+                    headers={
+                        "Accept-Encoding": "",
+                        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.74 Safari/537.36 Edg/99.0.1150.55",
+                        "Referer": "https://www.bilibili.com/",
+                    },
+                )
+            ) as response:
+                print(response.headers)
+                chunk_size = 1024
+                content_size = int(response.headers["Content-Length"])
+                data_count = 0
+                with open("video.flv", "wb") as file:
+                    for data in response.iter_content(chunk_size=chunk_size, decode_unicode=False):
+                        file.write(data)
+                        done_block = int((data_count / content_size) * 50)
+                        data_count = data_count + len(data)
+                        now_jd = (data_count / content_size) * 100
+                        print(f"[{done_block * '█'}{(50 - 1 - done_block) * ' '}] {now_jd:.1f}%", end='\r')
+                print("Download completed!" + " " * 50)
+            print("Trying to convert to mp4...")
             if not system("ffmpeg -i video.flv video.mp4"):
+                print("Removing flv...")
                 remove("video.flv")
+            else:
+                print("Convertion failed!")
 
 
 if __name__ == "__main__":
