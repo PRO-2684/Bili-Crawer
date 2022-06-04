@@ -4,7 +4,7 @@ from google.protobuf import text_format
 from requests import Session
 from re import search
 from bs4 import BeautifulSoup
-from os import chdir, mkdir
+from os import chdir, mkdir, system, remove
 from os.path import isdir
 
 
@@ -164,13 +164,15 @@ class Video:
                 "http://api.bilibili.com/x/player/playurl",
                 params={
                     "bvid": self.bv,
-                    "cid": self.parts[page]["cid"],  # 空的地方就是分p中p的序号
+                    "cid": self.parts[page]["cid"],
                 },
             )
             url = r.json()["data"]["durl"][0]['url']
             r = self.session.get(url)
             with open(f"video.flv", "wb") as f:
                 f.write(r.content)
+            if not system("ffmpeg -i video.flv video.mp4"):
+                remove("video.flv")
 
 
 if __name__ == "__main__":
