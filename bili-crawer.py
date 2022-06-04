@@ -114,7 +114,7 @@ class Video:
         return danmku
 
     def pagenum(self, pagestr):
-        if pagelist == "":
+        if pagestr == "":
             return range(1, len(self.parts) + 1)
         else:
             pagestr = pagestr.split(",")
@@ -191,7 +191,7 @@ class Video:
                             f"[{done_block * '█'}{(50 - 1 - done_block) * ' '}] {now_jd:.1f}%",
                             end="\r",
                         )
-                print("Download completed!" + " " * 50)
+                print("\nDownload completed!")
             print("Trying to convert to mp4...")
             if not system(f"ffmpeg -i P{page}.flv P{page}.mp4"):
                 print("Removing flv...")
@@ -272,8 +272,8 @@ if __name__ == "__main__":
     print(
         f"Title: {video.title}\nUp: {video.uploader}\nView: {video.statistics['view']}\tLike: {video.statistics['like']}\tCoin: {video.statistics['coin']}\tFavorite: {video.statistics['favorite']}"
     )
-    print("Video parts:")
-    for part in video.parts:
+    print("Selected ideo parts:")
+    for part in map(lambda i: video.parts[i - 1], video.pagenum(args.pagelist)):
         print("  #", part["id"])
         print("  Title:", part["title"])
         print("  Duration:", part["duration"])
