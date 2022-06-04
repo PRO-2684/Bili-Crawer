@@ -179,7 +179,6 @@ class Video:
                     },
                 )
             ) as response:
-                print(response.headers)
                 chunk_size = 1024
                 content_size = int(response.headers["Content-Length"])
                 data_count = 0
