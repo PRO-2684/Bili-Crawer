@@ -8,6 +8,7 @@ from os import chdir, mkdir, system, remove
 from os.path import isdir
 from contextlib import closing
 
+
 class Video:
     def __init__(self, bv: str) -> None:
         self.bv = bv
@@ -135,7 +136,6 @@ class Video:
                 for danmaku in danmakus:
                     f.write(danmaku + "\n")
 
-
     def fetch_comments(self, page: int = 0, mode: int = 3):
         """Returns a list of comments in `dict` format.
 
@@ -153,13 +153,13 @@ class Video:
     def download_comments(self):
         pass
 
-    def download_video(self,pagelist: str):
+    def download_video(self, pagelist: str):
         if pagelist == "":
             pages = range(len(self.parts))
         else:
             pages = self.pagenum(pagelist)
         for index, page in enumerate(pages):
-            print(f"{index}", end='\r')
+            print(f"{index}", end="\r")
             r = self.session.get(
                 "http://api.bilibili.com/x/player/playurl",
                 params={
@@ -167,7 +167,7 @@ class Video:
                     "cid": self.parts[page]["cid"],
                 },
             )
-            url = r.json()["data"]["durl"][0]['url']
+            url = r.json()["data"]["durl"][0]["url"]
             with closing(
                 self.session.get(
                     url,
@@ -184,12 +184,17 @@ class Video:
                 content_size = int(response.headers["Content-Length"])
                 data_count = 0
                 with open("video.flv", "wb") as file:
-                    for data in response.iter_content(chunk_size=chunk_size, decode_unicode=False):
+                    for data in response.iter_content(
+                        chunk_size=chunk_size, decode_unicode=False
+                    ):
                         file.write(data)
                         done_block = int((data_count / content_size) * 50)
                         data_count = data_count + len(data)
                         now_jd = (data_count / content_size) * 100
-                        print(f"[{done_block * '█'}{(50 - 1 - done_block) * ' '}] {now_jd:.1f}%", end='\r')
+                        print(
+                            f"[{done_block * '█'}{(50 - 1 - done_block) * ' '}] {now_jd:.1f}%",
+                            end="\r",
+                        )
                 print("Download completed!" + " " * 50)
             print("Trying to convert to mp4...")
             if not system("ffmpeg -i video.flv video.mp4"):
