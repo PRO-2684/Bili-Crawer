@@ -115,15 +115,15 @@ class Video:
 
     def pagenum(self, pagestr):
         pagestr = pagestr.split(",")
-        pagelis = []
+        pagelist = []
         for st in pagestr:
             try:
-                pagelis.append(int(st))
+                pagelist.append(int(st))  # Ponder!
             except:
                 rang = st.split("-")
                 for t in range(int(rang[0]), int(rang[1]) + 1):
-                    pagelis.append(t)
-        return pagelis
+                    pagelist.append(t)
+        return pagelist
 
     def download_danmakus(self, pagelist: str):
         if pagelist == "":
@@ -232,6 +232,12 @@ if __name__ == "__main__":
         "-d", "--danmaku", help="If included, download danmakus.", action="store_true"
     )
     parser.add_argument(
+        "-O",
+        "--overwrite",
+        help="If included, force overwrite files/folders.",
+        action="store_true",
+    )
+    parser.add_argument(
         "-p",
         "--pagelist",
         help="Specify which parts in the pagelist you'd like to download.",
@@ -258,6 +264,10 @@ if __name__ == "__main__":
     print("Target video:", bv)
     if not isdir(bv):
         mkdir(bv)
+    elif args.overwrite:
+        print(f'Files under folder "{bv}" might be overwritten!')
+    else:
+        parser.error(f'Folder "{bv}" already exists!')
     chdir(bv)
     video = Video(bv)
     print(
