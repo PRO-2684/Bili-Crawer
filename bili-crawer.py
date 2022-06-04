@@ -124,17 +124,17 @@ class Video:
                     pagelis.append(t)
         return pagelis
 
-    def download_danmakus(self, page_list: str):
-        if page_list == "":
-            pagelis = [k + 1 for k in range(len(self.parts))]
+    def download_danmakus(self, pagelist: str):
+        if pagelist == "":
+            pages = range(len(self.parts))
         else:
-            pagelis = self.pagenum(page_list)
-        for i in pagelis:
-            danmakus = self.fetch_danmakus(i)
-            with open(f"danmakus_{i}.txt", "w", encoding="utf-8") as f:
-                for danmu in danmakus:
-                    f.write(danmu + "\n")
-            f.close()
+            pages = self.pagenum(pagelist)
+        for page in pages:
+            danmakus = self.fetch_danmakus(page)
+            with open(f"danmakus_{page}.txt", "w", encoding="utf-8") as f:
+                for danmaku in danmakus:
+                    f.write(danmaku + "\n")
+
 
     def fetch_comments(self, page: int = 0, mode: int = 3):
         """Returns a list of comments in `dict` format.
@@ -153,19 +153,24 @@ class Video:
     def download_comments(self):
         pass
 
-    def download_video(self):
-        r = self.session.get(
-            "http://api.bilibili.com/x/player/playurl",
-            params={
-                "bvid": self.bv,
-                "cid": self.parts[0]["cid"],  # 空的地方就是分p中p的序号
-            },
-        )
-        r.encoding = "utf-8"
-        url = r.json()["data"]["durl"][0]["url"]  # 这里再加一个循环，最后把视频合并就好
-        r = self.session.get(url)
-        with open("test.flv", "wb") as f:
-            f.write(r.content)
+    def download_video(self,pagelist: str):
+        if pagelist == "":
+            pages = range(len(self.parts))
+        else:
+            pages = self.pagenum(pagelist)
+        for index, page in enumerate(pages):
+            print(f"{index}", end='\r')
+            r = self.session.get(
+                "http://api.bilibili.com/x/player/playurl",
+                params={
+                    "bvid": self.bv,
+                    "cid": self.parts[page]["cid"],  # 空的地方就是分p中p的序号
+                },
+            )
+            url = r.json()["data"]["durl"][0]['url']
+            r = self.session.get(url)
+            with open(f"video.flv", "wb") as f:
+                f.write(r.content)
 
 
 if __name__ == "__main__":
@@ -242,7 +247,7 @@ if __name__ == "__main__":
         if args.danmaku:
             video.download_danmakus(args.pagelist)
         if args.video:
-            video.download_video()
+            video.download_video(args.pagelist)
     else:
         playlist = video.fetch_playlist()
         for bv in playlist:
@@ -252,7 +257,7 @@ if __name__ == "__main__":
             if args.danmaku:
                 video.download_danmakus(args.pagelist)
             if args.video:
-                video.download_video()
+                video.download_video(args.pagelist)
 
     # Example usage:
     # danmakus = video.fetch_danmakus()
