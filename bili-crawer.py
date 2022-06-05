@@ -308,12 +308,3 @@ if __name__ == "__main__":
                 video.download_danmakus(args.pagelist)
             if args.video:
                 video.download_video(args.pagelist)
-
-    # Example usage:
-    # danmakus = video.fetch_danmakus()
-    # with open("danmaku.txt", "w", encoding="utf-8") as f:
-    #     for danmaku in danmakus:
-    #         f.write(danmaku.content + "\n")
-    # comments = video.fetch_comments()
-    # with open("comments.json", "w", encoding="utf-8") as f:
-    #     json.dump(comments, f, ensure_ascii=False)
