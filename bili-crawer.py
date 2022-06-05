@@ -10,9 +10,14 @@ from contextlib import closing
 
 
 def unescape(original: str):
-    return original.replace('\\', '')
+    return original.replace("\\", "")
 
-SPECIAL_DANMAKU_PATTERN = compile(r'\[".+",".+",".+",".+","(.+)",\d+,\d+,".+",".+",\d+,\d+,\d+,".+",\d\]')
+
+SPECIAL_DANMAKU_PATTERN = compile(
+    r'\[".+",".+",".+",".+","(.+)",\d+,\d+,".+",".+",\d+,\d+,\d+,".+",\d\]'
+)
+
+
 class Video:
     def __init__(self, bv: str) -> None:
         self.bv = bv
@@ -110,9 +115,9 @@ class Video:
             danmakus = Danmaku.DmSegMobileReply()
             danmakus.ParseFromString(r.content)
             for danmaku in danmakus.elems:
-                danmaku_segs = text_format.MessageToString(
-                    danmaku, as_utf8=True
-                ).split('\n')
+                danmaku_segs = text_format.MessageToString(danmaku, as_utf8=True).split(
+                    "\n"
+                )
                 danmaku_text = unescape(danmaku_segs[6][10:-1])
                 m = match(SPECIAL_DANMAKU_PATTERN, danmaku_text)
                 if m:
@@ -142,7 +147,7 @@ class Video:
             danmakus = self.fetch_danmakus(page)
             with open(f"danmakus_{page}.txt", "w", encoding="utf-8") as f:
                 for danmaku in danmakus:
-                    if not danmaku=="":
+                    if not danmaku == "":
                         f.write(danmaku + "\n")
 
     def fetch_comments(self, page: int = 0, mode: int = 3):
@@ -188,9 +193,7 @@ class Video:
                 content_size = int(r.headers["Content-Length"])
                 binary = 0
                 with open(f"P{page}.flv", "wb") as file:
-                    for data in r.iter_content(
-                        chunk_size=1024, decode_unicode=False
-                    ):
+                    for data in r.iter_content(chunk_size=1024, decode_unicode=False):
                         file.write(data)
                         binary += len(data)
                         percentage = (binary / content_size) * 100
@@ -251,8 +254,8 @@ if __name__ == "__main__":
     parser.add_argument(
         "-l",
         "--playlist",
-        help="Specify which video(s) in the playlist you'd like to download.",
-        default="",
+        help="If included, download the whole playlist.",
+        action="store_true",
     )
     parser.add_argument(
         "--debug", help="Use debug mode. i.e. show more info.", action="store_true"
