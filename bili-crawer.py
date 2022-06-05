@@ -2,13 +2,17 @@ import dm_pb2 as Danmaku
 from argparse import ArgumentParser, RawDescriptionHelpFormatter
 from google.protobuf import text_format
 from requests import Session
-from re import search
+from re import search, compile, match
 from bs4 import BeautifulSoup
 from os import chdir, mkdir, system, remove, listdir
 from os.path import isdir
 from contextlib import closing
 
 
+def unescape(original: str):
+    return original.replace('\\', '')
+
+SPECIAL_DANMAKU_PATTERN = compile(r'\[".+",".+",".+",".+","(.+)",\d+,\d+,".+",".+",\d+,\d+,\d+,".+",\d\]')
 class Video:
     def __init__(self, bv: str) -> None:
         self.bv = bv
@@ -99,19 +103,23 @@ class Video:
         }
         if avid:
             param["pid"] = avid
-        danmku = []
+        res = []
         n = self.parts[page - 1]["duration"] // 360  # 时长每6分钟爬取一次
         for _ in range(n + 1):
             r = self.session.get(api, params=param)
             danmakus = Danmaku.DmSegMobileReply()
             danmakus.ParseFromString(r.content)
             for danmaku in danmakus.elems:
-                danmaku_text = text_format.MessageToString(
+                danmaku_segs = text_format.MessageToString(
                     danmaku, as_utf8=True
                 ).split('\n')
-                danmku.append(danmaku_text[6][10:-1])
+                danmaku_text = unescape(danmaku_segs[6][10:-1])
+                m = match(SPECIAL_DANMAKU_PATTERN, danmaku_text)
+                if m:
+                    danmaku_text = m.groups()[0]
+                res.append(danmaku_text)
             param["segment_index"] += 1
-        return danmku
+        return res
 
     def pagenum(self, pagestr: str):
         if pagestr == "":
