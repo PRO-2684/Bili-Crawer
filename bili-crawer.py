@@ -212,6 +212,52 @@ class Video:
                 remove(f"P{page}.flv")
             else:
                 print("Convertion failed!")
+    def getComments(avid, page):
+        x=Session()
+        data = x.get(
+            "https://api.bilibili.com/x/v2/reply",
+            params={"pn": page, "type": 1, "oid": avid, "sort": 2},
+        )
+        content = data.json()
+        return content["data"]["replies"]
+
+    def fetch_comments(self, page: int = 0, mode: int = 3):
+        """Returns a list of comments in `dict` format.
+
+        | Mode | Meaning          |
+        | ---- | ---------------- |
+        | 0/3  | Order by hotness |
+        | 1    | Hotness & time   |
+        | 2    | Time             |
+        """
+        x=Session()
+        r = 0
+        table = "fZodR9XQDSUm21yCkr6zBqiveYah8bt4xsWpHnJE7jL5VG3guMTKNPAwcF"
+        tr = {}
+        for i in range(58):
+            tr[table[i]] = i
+        s = [11, 10, 3, 8, 4, 6]
+        xor = 177451812
+        add = 8728348608
+        for i in range(6):
+            r = r + tr[x[s[i]]] * 58**i
+        avid= (r - add) ^ xor
+        data = x.get('https://api.bilibili.com/x/v2/reply/main', params={
+            'jsonp': 'jsonp',
+            'next': 1,
+            'type': 1,
+            'oid': avid,
+            'mode': 3
+        }).json()
+        count = int(data["data"]["cursor"]["all_count"])
+        page_cnt = (count // 20) + 1  # 需要爬的评论区页数，1页有20条评论
+        with open("comment.txt", "w", encoding="utf-8") as f:
+            for page in range(1, page_cnt + 1):
+                print(f"{page}/{page_cnt}", end='\r')
+                comments = Video.getComments(avid, page)
+                for i, comment in enumerate(comments):
+                    f.write(f"Page {page} Comment {i + 1}, from {comment['member']['uname']}:\n{comment['content']['message'].strip()}\n")
+            print("Program finished.")
 
 
 if __name__ == "__main__":
