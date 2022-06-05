@@ -230,13 +230,13 @@ class Video:
         page_cnt = (count // 20) + 1  # 需要爬的评论区页数，1页有20条评论
         with open("comment.txt", "w", encoding="utf-8") as f:
             for page in range(1, page_cnt + 1):
-                print(f"Downloading comment {page}/{page_cnt}...")
+                print(f"Downloading comment {page}/{page_cnt}...", end='\r')
                 comments = self.fetch_comments(page)
                 for i, comment in enumerate(comments):
                     f.write(
                         f"Page {page} Comment {i + 1}, from {comment['member']['uname']}:\n{comment['content']['message'].strip()}\n"
                     )
-            print("Comment downloaded.")
+            print("Comment downloaded." + " " * 20)
 
 
 if __name__ == "__main__":
