@@ -1,23 +1,35 @@
 # Bili-Crawer
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
-This is a project in early development.
-
-We plan to do:
+## 🪄 Functions
 * Comments crawling
 * Danmakus crawling
 * Video downloading
 
-*Maybe also*:
-* Article crawling
-* Dynamics crawling
-
 Your stars are highly welcomed.
 
-## Installation
+## 📥 Installation
 1. `pip install -r requirements.txt`.
 2. Download `dm_pb2.py` and `bili-crawer.py`.
 
-## Usage
-`bili-crawer.py [-h] [-o OUTPUT] [-v] [-c] [-d] [--debug] target`
-Use `bili-crawer.py -h` for detailed information.
+## 📖 Usage
+```text
+bili-crawer.py [-h] [-o OUTPUT] [-v] [-c] [-d] [-O] [-p PAGELIST] [-l] target
+positional arguments:
+  target                🎯 A string with target BV id in it, for example "prefixbV1GJ411x7h7suffix".
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -o OUTPUT, --output OUTPUT
+                        📂 Output directory.
+  -v, --video           🎥 If included, download video(s).
+  -c, --comment         💬 If included, download comments.
+  -d, --danmaku         ☁️ If included, download danmakus.
+  -O, --overwrite       ⛔ If included, force overwrite files/folders.
+  -p PAGELIST, --pagelist PAGELIST
+                        👉 Specify which parts in the pagelist you'd like to download.
+  -l, --playlist        📃 If included, download the whole playlist.
+```
+
+## 🪧 Example
+

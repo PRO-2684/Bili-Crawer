@@ -172,8 +172,7 @@ class Video:
 
     def download_video(self, pagelist: str):
         pages = self.pagenum(pagelist)
-        for index, page in enumerate(pages):
-            print(f"{index}", end="\r")
+        for page in pages:
             r = self.session.get(
                 "http://api.bilibili.com/x/player/playurl",
                 params={
