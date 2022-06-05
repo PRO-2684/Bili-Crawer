@@ -235,13 +235,13 @@ class Video:
         with open("comment.txt", "w", encoding="utf-8") as f:
             i = 0
             for page in range(1, page_cnt + 1):
-                print(f"{clocks[i // CLOCK_INTERVAL]} Downloading comment {page}/{page_cnt}...", end='\r')
+                print(f"{clocks[i]} Downloading comment {page}/{page_cnt}...", end='\r')
                 comments = self.fetch_comments(page)
                 for comment in comments:
                     f.write(
                         f"[{comment['member']['uname']}]: {comment['content']['message'].strip()}\n"
                     )
-                i = (i + 1) % (12 * CLOCK_INTERVAL)
+                i = (i + 1) % 12
             print("✅ Comment downloaded." + " " * 13)
 
 
