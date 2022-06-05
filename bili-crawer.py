@@ -9,9 +9,24 @@ from os.path import isdir
 from contextlib import closing
 from string import digits
 
+table = "fZodR9XQDSUm21yCkr6zBqiveYah8bt4xsWpHnJE7jL5VG3guMTKNPAwcF"
+tr = {}
+for i in range(58):
+    tr[table[i]] = i
+s = [11, 10, 3, 8, 4, 6]
+xor = 177451812
+add = 8728348608
+
 
 def unescape(original: str):
     return original.replace("\\", "")
+
+
+def dec(bv):  # decoding,BV转化为AV号
+    r = 0
+    for i in range(6):
+        r = r + tr[bv[s[i]]] * 58**i
+    return (r - add) ^ xor
 
 
 SPECIAL_DANMAKU_PATTERN = compile(
@@ -128,7 +143,7 @@ class Video:
         return res
 
     def pagenum(self, pagestr: str):
-        if pagestr[0] not in digits:
+        if not pagestr or pagestr[0] not in digits:
             return range(1, len(self.parts) + 1)
         else:
             pagestr = pagestr.split(",")
@@ -145,30 +160,13 @@ class Video:
     def download_danmakus(self, pagelist: str):
         pages = self.pagenum(pagelist)
         for page in pages:
-            print(f'Downloading danmakus for P{page}...' + ' ' * 5, end='\r')
+            print(f"Downloading danmakus for P{page}..." + " " * 5, end="\r")
             danmakus = self.fetch_danmakus(page)
             with open(f"danmakus_P{page}.txt", "w", encoding="utf-8") as f:
                 for danmaku in danmakus:
                     if danmaku:
                         f.write(danmaku + "\n")
-        print('Danmaku downloaded!' + ' ' * 20)
-
-    def fetch_comments(self, page: int = 0, mode: int = 3):
-        """Returns a list of comments in `dict` format.
-
-        | Mode | Meaning          |
-        | ---- | ---------------- |
-        | 0/3  | Order by hotness |
-        | 1    | Hotness & time   |
-        | 2    | Time             |
-        """
-        api = "http://api.bilibili.com/x/v2/reply/main"
-        param = {"type": 1, "oid": 552506117, "mode": mode, "next": page}  # self.oid???
-        r = self.session.get(api, params=param)
-        return r.json()
-
-    def download_comments(self):
-        pass
+        print("Danmaku downloaded!" + " " * 20)
 
     def download_video(self, pagelist: str):
         pages = self.pagenum(pagelist)
@@ -212,52 +210,33 @@ class Video:
                 remove(f"P{page}.flv")
             else:
                 print("Convertion failed!")
-    def getComments(avid, page):
-        x=Session()
-        data = x.get(
+
+    def fetch_comments(self, page: int):
+        avid = dec(self.bv)
+        r = self.session.get(
             "https://api.bilibili.com/x/v2/reply",
             params={"pn": page, "type": 1, "oid": avid, "sort": 2},
         )
-        content = data.json()
-        return content["data"]["replies"]
+        content = r.json()
+        return content["data"].get('replies', [])
 
-    def fetch_comments(self, page: int = 0, mode: int = 3):
-        """Returns a list of comments in `dict` format.
-
-        | Mode | Meaning          |
-        | ---- | ---------------- |
-        | 0/3  | Order by hotness |
-        | 1    | Hotness & time   |
-        | 2    | Time             |
-        """
-        x=Session()
-        r = 0
-        table = "fZodR9XQDSUm21yCkr6zBqiveYah8bt4xsWpHnJE7jL5VG3guMTKNPAwcF"
-        tr = {}
-        for i in range(58):
-            tr[table[i]] = i
-        s = [11, 10, 3, 8, 4, 6]
-        xor = 177451812
-        add = 8728348608
-        for i in range(6):
-            r = r + tr[x[s[i]]] * 58**i
-        avid= (r - add) ^ xor
-        data = x.get('https://api.bilibili.com/x/v2/reply/main', params={
-            'jsonp': 'jsonp',
-            'next': 1,
-            'type': 1,
-            'oid': avid,
-            'mode': 3
-        }).json()
+    def download_comments(self, page: int = 0, mode: int = 3):
+        avid = dec(self.bv)
+        data = self.session.get(
+            "https://api.bilibili.com/x/v2/reply/main",
+            params={"jsonp": "jsonp", "next": 1, "type": 1, "oid": avid, "mode": 3},
+        ).json()
         count = int(data["data"]["cursor"]["all_count"])
         page_cnt = (count // 20) + 1  # 需要爬的评论区页数，1页有20条评论
         with open("comment.txt", "w", encoding="utf-8") as f:
             for page in range(1, page_cnt + 1):
-                print(f"{page}/{page_cnt}", end='\r')
-                comments = Video.getComments(avid, page)
+                print(f"Downloading comment {page}/{page_cnt}...")
+                comments = self.fetch_comments(page)
                 for i, comment in enumerate(comments):
-                    f.write(f"Page {page} Comment {i + 1}, from {comment['member']['uname']}:\n{comment['content']['message'].strip()}\n")
-            print("Program finished.")
+                    f.write(
+                        f"Page {page} Comment {i + 1}, from {comment['member']['uname']}:\n{comment['content']['message'].strip()}\n"
+                    )
+            print("Comment downloaded.")
 
 
 if __name__ == "__main__":
