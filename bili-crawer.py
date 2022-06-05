@@ -7,6 +7,7 @@ from bs4 import BeautifulSoup
 from os import chdir, mkdir, system, remove, listdir
 from os.path import isdir
 from contextlib import closing
+from string import digits
 
 
 def unescape(original: str):
@@ -98,8 +99,8 @@ class Video:
         serial: int = 1,
         avid: int = 0,
         type_: int = 1,
-    ) -> list[Danmaku.DanmakuElem]:
-        """Returns a list of `DanmakuElem`. Remember to use `as_utf8`."""
+    ) -> list[str]:
+        """Returns a list of danmaku string."""
         api = "https://api.bilibili.com/x/v2/dm/web/seg.so"
         param = {
             "type": type_,
@@ -127,7 +128,7 @@ class Video:
         return res
 
     def pagenum(self, pagestr: str):
-        if pagestr == "":
+        if pagestr[0] not in digits:
             return range(1, len(self.parts) + 1)
         else:
             pagestr = pagestr.split(",")
@@ -144,11 +145,13 @@ class Video:
     def download_danmakus(self, pagelist: str):
         pages = self.pagenum(pagelist)
         for page in pages:
+            print(f'Downloading danmakus for P{page}...' + ' ' * 5, end='\r')
             danmakus = self.fetch_danmakus(page)
-            with open(f"danmakus_{page}.txt", "w", encoding="utf-8") as f:
+            with open(f"danmakus_P{page}.txt", "w", encoding="utf-8") as f:
                 for danmaku in danmakus:
-                    if not danmaku == "":
+                    if danmaku:
                         f.write(danmaku + "\n")
+        print('Danmaku downloaded!' + ' ' * 20)
 
     def fetch_comments(self, page: int = 0, mode: int = 3):
         """Returns a list of comments in `dict` format.
@@ -199,7 +202,7 @@ class Video:
                         percentage = (binary / content_size) * 100
                         blocks = int(percentage / 2)
                         print(
-                            f"[{blocks * '█':<50}] {percentage:.1f}%",
+                            f"P{page}[{blocks * '█':<50}] {percentage:.1f}%",
                             end="\r",
                         )
                 print("\nDownload completed!")
@@ -257,9 +260,6 @@ if __name__ == "__main__":
         help="If included, download the whole playlist.",
         action="store_true",
     )
-    parser.add_argument(
-        "--debug", help="Use debug mode. i.e. show more info.", action="store_true"
-    )
     args = parser.parse_args()
     print(banner)
     bv = ""
@@ -283,7 +283,7 @@ if __name__ == "__main__":
     print(
         f"Title: {video.title}\nUp: {video.uploader}\nView: {video.statistics['view']}\tLike: {video.statistics['like']}\tCoin: {video.statistics['coin']}\tFavorite: {video.statistics['favorite']}"
     )
-    print("Selected ideo parts:")
+    print("Selected video parts:")
     for part in map(lambda i: video.parts[i - 1], video.pagenum(args.pagelist)):
         print("  #", part["id"])
         print("  Title:", part["title"])
@@ -308,3 +308,4 @@ if __name__ == "__main__":
                 video.download_danmakus(args.pagelist)
             if args.video:
                 video.download_video(args.pagelist)
+    print("🎉 Download comleted!")
