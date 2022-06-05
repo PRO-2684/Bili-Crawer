@@ -9,6 +9,8 @@ from os.path import isdir
 from contextlib import closing
 from string import digits
 
+CLOCK_INTERVAL = 64
+clocks = "🕐🕑🕒🕓🕔🕕🕖🕗🕘🕙🕚🕛"
 table = "fZodR9XQDSUm21yCkr6zBqiveYah8bt4xsWpHnJE7jL5VG3guMTKNPAwcF"
 tr = {}
 for i in range(58):
@@ -160,13 +162,13 @@ class Video:
     def download_danmakus(self, pagelist: str):
         pages = self.pagenum(pagelist)
         for page in pages:
-            print(f"Downloading danmakus for P{page}..." + " " * 5, end="\r")
+            print(f"⬇️ Downloading danmakus of P{page}...  ", end="\r")
             danmakus = self.fetch_danmakus(page)
             with open(f"danmakus_P{page}.txt", "w", encoding="utf-8") as f:
                 for danmaku in danmakus:
                     if danmaku:
                         f.write(danmaku + "\n")
-        print("Danmaku downloaded!" + " " * 20)
+        print(f"✅ Danmakus downloaded!" + " " * 13)
 
     def download_video(self, pagelist: str):
         pages = self.pagenum(pagelist)
@@ -194,22 +196,24 @@ class Video:
                 content_size = int(r.headers["Content-Length"])
                 binary = 0
                 with open(f"P{page}.flv", "wb") as file:
+                    i = 0
                     for data in r.iter_content(chunk_size=1024, decode_unicode=False):
                         file.write(data)
                         binary += len(data)
                         percentage = (binary / content_size) * 100
                         blocks = int(percentage / 2)
                         print(
-                            f"P{page}[{blocks * '█':<50}] {percentage:.1f}%",
+                            f"{clocks[i // CLOCK_INTERVAL]} P{page}[{blocks * '█':<50}] {percentage:.1f}%",
                             end="\r",
                         )
-                print("\nDownload completed!")
-            print("Trying to convert to mp4...")
-            if not system(f"ffmpeg -i P{page}.flv P{page}.mp4 -y"):
-                print("Removing flv...")
+                        i = (i + 1) % (12 * CLOCK_INTERVAL)
+            print("🎥 Calling ffmpeg to convert to mp4..." + " " * 28, end='\r')
+            if not system(f"ffmpeg -i P{page}.flv P{page}.mp4 -y -loglevel error"):
+                print("🗑️ Removing flv..." + " " * 19, end='\r')
                 remove(f"P{page}.flv")
+                print(f"✅ P{page}.mp4 saved!" + " " * 7)
             else:
-                print("Convertion failed!")
+                print("⚠️ Convertion failed!")
 
     def fetch_comments(self, page: int):
         avid = dec(self.bv)
@@ -224,19 +228,21 @@ class Video:
         avid = dec(self.bv)
         data = self.session.get(
             "https://api.bilibili.com/x/v2/reply/main",
-            params={"jsonp": "jsonp", "next": 1, "type": 1, "oid": avid, "mode": 3},
+            params={"jsonp": "jsonp", "next": 1, "type": 1, "oid": avid, "mode": mode},
         ).json()
         count = int(data["data"]["cursor"]["all_count"])
-        page_cnt = (count // 20) + 1  # 需要爬的评论区页数，1页有20条评论
+        page_cnt = min((count // 20) + 1, 100)  # 100 pages at most
         with open("comment.txt", "w", encoding="utf-8") as f:
+            i = 0
             for page in range(1, page_cnt + 1):
-                print(f"Downloading comment {page}/{page_cnt}...", end='\r')
+                print(f"{clocks[i // CLOCK_INTERVAL]} Downloading comment {page}/{page_cnt}...", end='\r')
                 comments = self.fetch_comments(page)
-                for i, comment in enumerate(comments):
+                for comment in comments:
                     f.write(
-                        f"Page {page} Comment {i + 1}, from {comment['member']['uname']}:\n{comment['content']['message'].strip()}\n"
+                        f"[{comment['member']['uname']}]: {comment['content']['message'].strip()}\n"
                     )
-            print("Comment downloaded." + " " * 20)
+                i = (i + 1) % (12 * CLOCK_INTERVAL)
+            print("✅ Comment downloaded." + " " * 13)
 
 
 if __name__ == "__main__":
@@ -248,41 +254,41 @@ if __name__ == "__main__":
 |  |_)  | |  | |  `----.|  |        |  `----.|  |\  \----./  _____  \  \    /\    /    |  |____ |  |\  \----.
 |______/  |__| |_______||__|         \______|| _| `._____/__/     \__\  \__/  \__/     |_______|| _| `._____|"""
     parser = ArgumentParser(
-        description=banner + "\n\nA simple script for Bilibili crawling.",
+        description=banner + "\n\n🪄 A simple script for Bilibili crawling.",
         formatter_class=RawDescriptionHelpFormatter,
     )
     parser.add_argument(
         "target",
-        help='A string with target BV id in it, for example "prefixbV1GJ411x7h7suffix".',
+        help='🎯 A string with target BV id in it, for example "prefixbV1GJ411x7h7suffix".',
     )
     parser.add_argument(
-        "-o", "--output", help="Output directory.", default="", required=False
+        "-o", "--output", help="📂 Output directory.", default="", required=False
     )
     parser.add_argument(
-        "-v", "--video", help="If included, download video(s).", action="store_true"
+        "-v", "--video", help="🎥 If included, download video(s).", action="store_true"
     )
     parser.add_argument(
-        "-c", "--comment", help="If included, download comments.", action="store_true"
+        "-c", "--comment", help="💬 If included, download comments.", action="store_true"
     )
     parser.add_argument(
-        "-d", "--danmaku", help="If included, download danmakus.", action="store_true"
+        "-d", "--danmaku", help="☁️ If included, download danmakus.", action="store_true"
     )
     parser.add_argument(
         "-O",
         "--overwrite",
-        help="If included, force overwrite files/folders.",
+        help="⛔ If included, force overwrite files/folders.",
         action="store_true",
     )
     parser.add_argument(
         "-p",
         "--pagelist",
-        help="Specify which parts in the pagelist you'd like to download.",
+        help="👉 Specify which parts in the pagelist you'd like to download.",
         default="",
     )
     parser.add_argument(
         "-l",
         "--playlist",
-        help="If included, download the whole playlist.",
+        help="📃 If included, download the whole playlist.",
         action="store_true",
     )
     args = parser.parse_args()
@@ -293,22 +299,22 @@ if __name__ == "__main__":
     if m:
         bv = m.groups()[0]
     else:
-        parser.error("No valid BV found.")
+        parser.error("⚠️ No valid BV found.")
     bv = bv[:2].upper() + bv[2:]
-    print("Target video:", bv)
+    print("🎯 Target video:", bv)
     if not isdir(bv):
         mkdir(bv)
     elif listdir(bv):
         if args.overwrite:
-            print(f'Files under folder "{bv}" might be overwritten!')
+            print(f'⚠️ Files under folder "{bv}" might be overwritten!')
         else:
-            parser.error(f'Folder "{bv}" already exists and is not empty!')
+            parser.error(f'⚠️ Folder "{bv}" already exists and is not empty!')
     chdir(bv)
     video = Video(bv)
     print(
-        f"Title: {video.title}\nUp: {video.uploader}\nView: {video.statistics['view']}\tLike: {video.statistics['like']}\tCoin: {video.statistics['coin']}\tFavorite: {video.statistics['favorite']}"
+        f"  Title: {video.title}\n  Up: {video.uploader}\n  View: {video.statistics['view']}\tLike: {video.statistics['like']}\tCoin: {video.statistics['coin']}\tFavorite: {video.statistics['favorite']}"
     )
-    print("Selected video parts:")
+    print("☑️ Selected video parts:")
     for part in map(lambda i: video.parts[i - 1], video.pagenum(args.pagelist)):
         print("  #", part["id"])
         print("  Title:", part["title"])
@@ -333,4 +339,4 @@ if __name__ == "__main__":
                 video.download_danmakus(args.pagelist)
             if args.video:
                 video.download_video(args.pagelist)
-    print("🎉 Download comleted!")
+    print("🎉 All done!" if (args.comment or args.danmaku or args.video) else "🤔 You didn't specify anything to download.")
