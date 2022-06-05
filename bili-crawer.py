@@ -108,8 +108,8 @@ class Video:
             for danmaku in danmakus.elems:
                 danmaku_text = text_format.MessageToString(
                     danmaku, as_utf8=True
-                ).split()
-                danmku.append(danmaku_text[13][1:-1])
+                ).split('\n')
+                danmku.append(danmaku_text[6][10:-1])
             param["segment_index"] += 1
         return danmku
 
@@ -134,7 +134,8 @@ class Video:
             danmakus = self.fetch_danmakus(page)
             with open(f"danmakus_{page}.txt", "w", encoding="utf-8") as f:
                 for danmaku in danmakus:
-                    f.write(danmaku + "\n")
+                    if not danmaku=="":
+                        f.write(danmaku + "\n")
 
     def fetch_comments(self, page: int = 0, mode: int = 3):
         """Returns a list of comments in `dict` format.
