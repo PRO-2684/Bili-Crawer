@@ -34,10 +34,4 @@ optional arguments:
 ## 🪧 Demo
 ### Asciinema
 [![asciicast](https://asciinema.org/a/5UK7Hy9xZh7sRCkbsarV8XMGj.png)](https://asciinema.org/a/5UK7Hy9xZh7sRCkbsarV8XMGj)
-Due to the use of nerd fonts and emojis, asciinema replay might not be so satisfying.
-
-### Video
-
-<video id="video" controls="" preload="none" poster="">
-      <source id="mp4" src="./example/demo.mp4" type="video/mp4">
-</videos>
+Due to the use of nerd fonts and emojis, asciinema replay might not be so satisfying. You might as well download the record file and replay locally.
