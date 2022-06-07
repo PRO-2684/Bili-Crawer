@@ -32,6 +32,10 @@ optional arguments:
 ```
 
 ## 🪧 Demo
+### Pictures
+![In progress](./pic/progress.gif)
+![Finished](./pic/fin.png)
+
 ### Asciinema
 [![asciicast](https://asciinema.org/a/499936.svg)](https://asciinema.org/a/499936)
 Due to the use of nerd fonts and emojis, asciinema replay might not be so satisfying. You might as well download the record file `bili.cast` and replay locally.
