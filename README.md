@@ -33,5 +33,5 @@ optional arguments:
 
 ## 🪧 Demo
 ### Asciinema
-[![asciicast](https://asciinema.org/a/5UK7Hy9xZh7sRCkbsarV8XMGj.png)](https://asciinema.org/a/5UK7Hy9xZh7sRCkbsarV8XMGj)
-Due to the use of nerd fonts and emojis, asciinema replay might not be so satisfying. You might as well download the record file and replay locally.
+[![asciicast](https://asciinema.org/a/499936.svg)](https://asciinema.org/a/499936)
+Due to the use of nerd fonts and emojis, asciinema replay might not be so satisfying. You might as well download the record file `bili.cast` and replay locally.
